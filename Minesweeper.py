@@ -169,6 +169,9 @@ def game_loop():
           # check for the quit event
           if event.type == pg.QUIT:
              running = False
+          if event.type == pg.KEYDOWN:
+             if event.key == pg.K_ESCAPE:
+                 running = False
           if event.type == pg.MOUSEBUTTONDOWN:
              mouseX, mouseY = pg.mouse.get_pos()
              column = mouseX // space_per_cell
@@ -201,11 +204,14 @@ def game_loop():
                    lose()
        # check whether every mine is flagged --> game won 
        win_cond = 0
+       non_win_cond = True
        for cell_obj in game_array:
-          if cell_obj.mine:
-             if cell_obj.flagged:
+          if cell_obj.flagged:
+             if cell_obj.mine:
                 win_cond += 1
-       if win_cond == number_of_mines_static:
+             else:
+                non_win_cond = False
+       if win_cond == number_of_mines_static and non_win_cond:
           for cell_obj in game_array:
              cell_obj.selected = True
           screen.blit(smiles_win, smiles_pos)
@@ -214,7 +220,6 @@ def game_loop():
              # cell_obj.selected = True
              cell_obj.draw()
           pg.display.flip()
-          win()
        # draw the game window
        for cell_obj in game_array:
           # cell_obj.selected = True
@@ -226,18 +231,25 @@ def game_menu():
     screen.fill(white)
     menu = True
     start_button_size = (350,100)
+    quit_button_size = (350,100)
     start_button_pos = (resolutionX/2, 300)
+    quit_button_pos = (resolutionX/2, 500)
     start_button_pos_corr = (start_button_pos[0]-start_button_size[0]/2, start_button_pos[1]-start_button_size[1]/2)
+    quit_button_pos_corr = (quit_button_pos[0]-quit_button_size[0]/2, quit_button_pos[1]-quit_button_size[1]/2)
     # button_size = (300,100)
     fontLarge = pg.font.SysFont('arial', 115)
     fontSmall = pg.font.SysFont('arial', 80)
     start_buttonText = fontSmall.render('Start Game', True, black)
     start_buttonTextRect = start_buttonText.get_rect()
     start_buttonTextRect.center = (start_button_pos)
+    quit_buttonText = fontSmall.render('Quit Game', True, black)
+    quit_buttonTextRect = start_buttonText.get_rect()
+    quit_buttonTextRect.center = (quit_button_pos)
     largeText = fontLarge.render('Minesweeper', True, black)
     largeTextRect = largeText.get_rect()
     largeTextRect.center = (resolutionX/2, 100)
     start_button = pg.Rect(start_button_pos_corr[0], start_button_pos_corr[1], start_button_size[0], start_button_size[1])
+    quit_button = pg.Rect(quit_button_pos_corr[0], quit_button_pos_corr[1], quit_button_size[0], quit_button_size[1])
     while menu:
         for event in pg.event.get():
             if event.type == pg.QUIT:
@@ -247,9 +259,13 @@ def game_menu():
                 if start_button.collidepoint(mouse_pos):
                     game_loop()
                     screen.fill(white)
+                if quit_button.collidepoint(mouse_pos):
+                    menu = False
         pg.draw.rect(screen, [255,0,0], start_button)
+        pg.draw.rect(screen, [255,0,0], quit_button)
         screen.blit(largeText, largeTextRect)
         screen.blit(start_buttonText, start_buttonTextRect)
+        screen.blit(quit_buttonText, quit_buttonTextRect)
         pg.display.flip()
         
 
