@@ -23,10 +23,15 @@ game_array_size = 20
 # space per cell
 space_per_cell = (resolutionX) // game_array_size
 
+# colors
+white = (255,255,255)
+black = (0,0,0)
+
 pg.init()
 # game window
 screen = pg.display.set_mode([resolutionX, resolutionY])
 pg.display.set_caption('Minesweeper')
+screen.fill((255,255,255))
 # sprites from spriters-resource.com
 cell_default = pg.transform.scale(pg.image.load('sprites/cell_default.png'),
                                   (space_per_cell, space_per_cell))
@@ -44,7 +49,6 @@ pg.display.set_icon(cell_mine)
 # coordinates of the smiley
 smiles_coord = (game_array_size/2,1)
 smiles_pos = ((game_array_size/2)*space_per_cell, 1*space_per_cell)
-screen.blit(smiles_default, smiles_pos)
 # sprites for empty and number cells
 cell_selected = []
 for i in range(9):
@@ -156,62 +160,100 @@ for cell_obj in game_array:
    cell_obj.get_neighbouring_mines()
 
 # game loop
-running = True
-while running:
-   for event in pg.event.get():
-      # check for the quit event
-      if event.type == pg.QUIT:
-         running = False
-      if event.type == pg.MOUSEBUTTONDOWN:
-         mouseX, mouseY = pg.mouse.get_pos()
-         column = mouseX // space_per_cell
-         row = (mouseY-100) // space_per_cell
-         row_alt = mouseY // space_per_cell
-         # check if the smiley is pressed and reset the game
-         if column == smiles_coord[0] and row_alt == smiles_coord[1]:
-            reset()
-            pg.display.update()
-         index = column*game_array_size + row
-         active_cell = game_array[index]
-         # check if the right mousebutton is pressed and flag the cell
-         if pg.mouse.get_pressed()[2] and row >= 0:
-            active_cell.flagged = not active_cell.flagged
-         # check if the right mouse button is pressed and evaluate the rules
-         # of the game
-         if pg.mouse.get_pressed()[0] and row >= 0:
-            active_cell.selected = True
-            if active_cell.neighbouring_mines == 0 and not active_cell.mine:
-               floodfill(row, column)
-            if active_cell.mine == 1:
-               for cell_obj in game_array:
-                  if cell_obj.mine == 1:
-                     cell_obj.selected = True
-               screen.blit(smiles_lose, smiles_pos)
-               for cell_obj in game_array:
-               # cell_obj.selected = True
-                  cell_obj.draw()
-               pg.display.flip()
-               lose()
-   # check whether every mine is flagged --> game won 
-   win_cond = 0
-   for cell_obj in game_array:
-      if cell_obj.mine:
-         if cell_obj.flagged:
-            win_cond += 1
-   if win_cond == number_of_mines_static:
-      for cell_obj in game_array:
-         cell_obj.selected = True
-      screen.blit(smiles_win, smiles_pos)
-      pg.display.update()
-      for cell_obj in game_array:
-         # cell_obj.selected = True
-         cell_obj.draw()
-      pg.display.flip()
-      win()
-   # draw the game window
-   for cell_obj in game_array:
-      # cell_obj.selected = True
-      cell_obj.draw()
-   pg.display.flip()
-   
+def game_loop():
+    screen.fill(white)
+    running = True
+    screen.blit(smiles_default, smiles_pos)
+    while running:
+       for event in pg.event.get():
+          # check for the quit event
+          if event.type == pg.QUIT:
+             running = False
+          if event.type == pg.MOUSEBUTTONDOWN:
+             mouseX, mouseY = pg.mouse.get_pos()
+             column = mouseX // space_per_cell
+             row = (mouseY-100) // space_per_cell
+             row_alt = mouseY // space_per_cell
+             # check if the smiley is pressed and reset the game
+             if column == smiles_coord[0] and row_alt == smiles_coord[1]:
+                reset()
+                pg.display.update()
+             index = column*game_array_size + row
+             active_cell = game_array[index]
+             # check if the right mousebutton is pressed and flag the cell
+             if pg.mouse.get_pressed()[2] and row >= 0:
+                active_cell.flagged = not active_cell.flagged
+             # check if the right mouse button is pressed and evaluate the rules
+             # of the game
+             if pg.mouse.get_pressed()[0] and row >= 0:
+                active_cell.selected = True
+                if active_cell.neighbouring_mines == 0 and not active_cell.mine:
+                   floodfill(row, column)
+                if active_cell.mine == 1:
+                   for cell_obj in game_array:
+                      if cell_obj.mine == 1:
+                         cell_obj.selected = True
+                   screen.blit(smiles_lose, smiles_pos)
+                   for cell_obj in game_array:
+                   # cell_obj.selected = True
+                      cell_obj.draw()
+                   pg.display.flip()
+                   lose()
+       # check whether every mine is flagged --> game won 
+       win_cond = 0
+       for cell_obj in game_array:
+          if cell_obj.mine:
+             if cell_obj.flagged:
+                win_cond += 1
+       if win_cond == number_of_mines_static:
+          for cell_obj in game_array:
+             cell_obj.selected = True
+          screen.blit(smiles_win, smiles_pos)
+          pg.display.update()
+          for cell_obj in game_array:
+             # cell_obj.selected = True
+             cell_obj.draw()
+          pg.display.flip()
+          win()
+       # draw the game window
+       for cell_obj in game_array:
+          # cell_obj.selected = True
+          cell_obj.draw()
+       pg.display.flip()
+       
+# menu
+def game_menu():
+    screen.fill(white)
+    menu = True
+    start_button_size = (350,100)
+    start_button_pos = (resolutionX/2, 300)
+    start_button_pos_corr = (start_button_pos[0]-start_button_size[0]/2, start_button_pos[1]-start_button_size[1]/2)
+    # button_size = (300,100)
+    fontLarge = pg.font.SysFont('arial', 115)
+    fontSmall = pg.font.SysFont('arial', 80)
+    start_buttonText = fontSmall.render('Start Game', True, black)
+    start_buttonTextRect = start_buttonText.get_rect()
+    start_buttonTextRect.center = (start_button_pos)
+    largeText = fontLarge.render('Minesweeper', True, black)
+    largeTextRect = largeText.get_rect()
+    largeTextRect.center = (resolutionX/2, 100)
+    start_button = pg.Rect(start_button_pos_corr[0], start_button_pos_corr[1], start_button_size[0], start_button_size[1])
+    while menu:
+        for event in pg.event.get():
+            if event.type == pg.QUIT:
+                menu = False
+            if event.type == pg.MOUSEBUTTONDOWN:
+                mouse_pos = event.pos
+                if start_button.collidepoint(mouse_pos):
+                    game_loop()
+                    screen.fill(white)
+        pg.draw.rect(screen, [255,0,0], start_button)
+        screen.blit(largeText, largeTextRect)
+        screen.blit(start_buttonText, start_buttonTextRect)
+        pg.display.flip()
+        
+
+    
+
+game_menu()
 pg.quit()
