@@ -47,8 +47,8 @@ smiles_lose = pg.transform.scale(pg.image.load('sprites/smiles_lose.png'),
                                   (space_per_cell, space_per_cell))
 pg.display.set_icon(cell_mine)
 # coordinates of the smiley
-smiles_coord = (game_array_size/2,1)
-smiles_pos = ((game_array_size/2)*space_per_cell, 1*space_per_cell)
+smiles_pos = (resolutionX/2-space_per_cell/2, 50-space_per_cell/2)
+smiles_coord = (smiles_pos[0]/space_per_cell, smiles_pos[1]/space_per_cell)
 # sprites for empty and number cells
 cell_selected = []
 for i in range(9):
@@ -163,6 +163,9 @@ for cell_obj in game_array:
 def game_loop():
     screen.fill(white)
     running = True
+    smiles_button_size = (space_per_cell,space_per_cell)
+    smiles_button_pos = (smiles_pos)
+    smiles_button = pg.Rect(smiles_button_pos[0], smiles_button_pos[1], smiles_button_size[0], smiles_button_size[1])
     screen.blit(smiles_default, smiles_pos)
     while running:
        for event in pg.event.get():
@@ -176,9 +179,8 @@ def game_loop():
              mouseX, mouseY = pg.mouse.get_pos()
              column = mouseX // space_per_cell
              row = (mouseY-100) // space_per_cell
-             row_alt = mouseY // space_per_cell
              # check if the smiley is pressed and reset the game
-             if column == smiles_coord[0] and row_alt == smiles_coord[1]:
+             if smiles_button.collidepoint(mouseX, mouseY):
                 reset()
                 pg.display.update()
              index = column*game_array_size + row
@@ -201,7 +203,6 @@ def game_loop():
                    # cell_obj.selected = True
                       cell_obj.draw()
                    pg.display.flip()
-                   lose()
        # check whether every mine is flagged --> game won 
        win_cond = 0
        non_win_cond = True
