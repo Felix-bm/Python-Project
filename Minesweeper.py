@@ -27,6 +27,7 @@ space_per_cell = (resolutionX) // game_array_size
 # colors
 white = (255,255,255)
 black = (0,0,0)
+red = (255,0,0)
 
 pg.init()
 clock = pg.time.Clock()
@@ -114,7 +115,38 @@ class Cell:
          if new_row >= 0 and new_row < game_array_size and new_column >= 0 and new_column < game_array_size:
             if game_array[new_column*game_array_size + new_row].mine:
                self.neighbouring_mines += 1
-               
+
+class TextButton(pg.Rect):
+    """
+    class for creating the text buttons
+    """
+    def __init__(self, screen, pos, size, text, color, color_button=white, font='arial', fontsize=0):
+        self.screen = screen
+        self.pos = pos
+        self.size = size
+        self.text = text
+        self.font = font
+        self.color_button = color_button
+        font_array = (115,80,50)
+        self.fontUsed = pg.font.SysFont(font, font_array[fontsize])
+        pos_corr = (pos[0]-size[0]/2, pos[1]-size[1]/2)
+        self.buttonText = self.fontUsed.render(text, True, color)
+        self.buttonTextRect = self.buttonText.get_rect()
+        self.buttonTextRect.center = (self.pos)
+        super().__init__(pos_corr[0], pos_corr[1], size[0], size[1])
+    
+    def draw_text(self):
+        self.screen.blit(self.buttonText, self.buttonTextRect)
+        
+    def draw_all(self):
+        pg.draw.rect(self.screen, self.color_button, self)
+        self.draw_text()
+        
+        
+        
+        
+    
+    
 # implement the standard minesweeper behaviour, where if you click on an
 # empty cell, all neighbouring cells are getting selected as well
 def floodfill(row, column):
@@ -309,33 +341,14 @@ def highscore_menu():
     menu = True
     checked_highscore = check_highscore()
     checked_highscore = np.round(checked_highscore, 3)
-    fontLarge = pg.font.SysFont('arial', 115)
-    fontSmall = pg.font.SysFont('arial', 80)
-    easy_button_pos = (resolutionX/2, 300)
     easy_txt = f'Easy:    {checked_highscore[0]}s'
-    easy_buttonText = fontSmall.render(easy_txt, True, black)
-    easy_buttonTextRect = easy_buttonText.get_rect()
-    easy_buttonTextRect.center = (easy_button_pos)
-    medium_button_pos = (resolutionX/2, 420)
     medium_txt = f'Medium:    {checked_highscore[1]}s'
-    medium_buttonText = fontSmall.render(medium_txt, True, black)
-    medium_buttonTextRect = medium_buttonText.get_rect()
-    medium_buttonTextRect.center = (medium_button_pos)
-    hard_button_pos = (resolutionX/2, 540)
     hard_txt = f'Hard:    {checked_highscore[2]}s'
-    hard_buttonText = fontSmall.render(hard_txt, True, black)
-    hard_buttonTextRect = hard_buttonText.get_rect()
-    hard_buttonTextRect.center = (hard_button_pos)
-    reset_button_size = (500,100)
-    reset_button_pos = (resolutionX/2, 660)
-    reset_button_pos_corr = (reset_button_pos[0]-reset_button_size[0]/2, reset_button_pos[1]-reset_button_size[1]/2)
-    reset_buttonText = fontSmall.render('Reset Highscore', True, black)
-    reset_buttonTextRect = reset_buttonText.get_rect()
-    reset_buttonTextRect.center = (reset_button_pos)
-    largeText = fontLarge.render('Highscore', True, black)
-    largeTextRect = largeText.get_rect()
-    largeTextRect.center = (resolutionX/2, 100)
-    reset_button = pg.Rect(reset_button_pos_corr[0], reset_button_pos_corr[1], reset_button_size[0], reset_button_size[1])
+    easy_button = TextButton(screen, (resolutionX/2,300), (500,100), easy_txt, black, fontsize=1)
+    medium_button = TextButton(screen, (resolutionX/2,420), (500,100), medium_txt, black, fontsize=1)
+    hard_button = TextButton(screen, (resolutionX/2,540), (500,100), hard_txt, black, fontsize=1)
+    largeText = TextButton(screen, (resolutionX/2,100), (500,100), 'Highscore', black, fontsize=0)
+    reset_button = TextButton(screen, (resolutionX/2,660), (500,100), 'Reset Highscore', black, color_button=red,fontsize=1)
     while menu:
        for event in pg.event.get():
           if event.type == pg.QUIT:
@@ -349,47 +362,22 @@ def highscore_menu():
                 reset_highscore()
                 highscore_menu()
                 menu = False
-       pg.draw.rect(screen, [255,0,0], reset_button)
-       screen.blit(easy_buttonText, easy_buttonTextRect)
-       screen.blit(medium_buttonText, medium_buttonTextRect)
-       screen.blit(hard_buttonText, hard_buttonTextRect)
-       screen.blit(reset_buttonText, reset_buttonTextRect)
-       screen.blit(largeText, largeTextRect)
+       easy_button.draw_text()
+       medium_button.draw_text()
+       hard_button.draw_text()
+       reset_button.draw_all()
+       largeText.draw_text()
        pg.display.flip()
        clock.tick(60)
              
 def sel_diff():
     screen.fill(white)
     selDiff = True
-    easy_button_size = (350,100)
-    easy_button_pos = (resolutionX/2, 300)
-    easy_button_pos_corr = (easy_button_pos[0]-easy_button_size[0]/2, easy_button_pos[1]-easy_button_size[1]/2)
-    medium_button_size = (350,100)
-    medium_button_pos = (resolutionX/2, 420)
-    medium_button_pos_corr = (medium_button_pos[0]-medium_button_size[0]/2, medium_button_pos[1]-medium_button_size[1]/2)
-    hard_button_size = (350,100)
-    hard_button_pos = (resolutionX/2, 540)
-    hard_button_pos_corr = (hard_button_pos[0]-hard_button_size[0]/2, hard_button_pos[1]-hard_button_size[1]/2)
-    fontLarge = pg.font.SysFont('arial', 115)
-    fontSmall = pg.font.SysFont('arial', 80)
-    easy_buttonText = fontSmall.render('Easy', True, black)
-    easy_buttonTextRect = easy_buttonText.get_rect()
-    easy_buttonTextRect.center = (easy_button_pos)
-    medium_buttonText = fontSmall.render('Medium', True, black)
-    medium_buttonTextRect = medium_buttonText.get_rect()
-    medium_buttonTextRect.center = (medium_button_pos)
-    hard_buttonText = fontSmall.render('Hard', True, black)
-    hard_buttonTextRect = hard_buttonText.get_rect()
-    hard_buttonTextRect.center = (hard_button_pos)
-    largeText = fontLarge.render('Set Difficulty', True, black)
-    largeTextRect = largeText.get_rect()
-    largeTextRect.center = (resolutionX/2, 100)
-    updateText = fontSmall.render('Difficulty Set!', True, black)
-    updateTextRect = updateText.get_rect()
-    updateTextRect.center = (resolutionX/2, 700)
-    easy_button = pg.Rect(easy_button_pos_corr[0], easy_button_pos_corr[1], easy_button_size[0], easy_button_size[1])
-    medium_button = pg.Rect(medium_button_pos_corr[0], medium_button_pos_corr[1], medium_button_size[0], medium_button_size[1])
-    hard_button = pg.Rect(hard_button_pos_corr[0], hard_button_pos_corr[1], hard_button_size[0], hard_button_size[1])
+    largeText = TextButton(screen, (resolutionX/2,100), (500,100), 'Set Difficulty', black, fontsize=0)
+    updateText = TextButton(screen, (resolutionX/2, 700), (350,100), 'Difficulty Set!', black, fontsize=1)
+    easy_button = TextButton(screen, (resolutionX/2, 300), (350,100), 'Easy', black, color_button=red, fontsize=1)
+    medium_button = TextButton(screen, (resolutionX/2, 420), (350,100), 'Medium', black, color_button=red, fontsize=1)
+    hard_button = TextButton(screen, (resolutionX/2, 540), (350,100), 'Hard', black, color_button=red, fontsize=1)
     update = 0
     while selDiff:
        for event in pg.event.get():
@@ -411,39 +399,37 @@ def sel_diff():
                 update = 60
        screen.fill(white)
        if update:
-          screen.blit(updateText, updateTextRect)
+          updateText.draw_text()
           update -= 1
-       pg.draw.rect(screen, [255,0,0], easy_button)
-       pg.draw.rect(screen, [255,0,0], medium_button)
-       pg.draw.rect(screen, [255,0,0], hard_button)
-       screen.blit(easy_buttonText, easy_buttonTextRect)
-       screen.blit(medium_buttonText, medium_buttonTextRect)
-       screen.blit(hard_buttonText, hard_buttonTextRect)
-       screen.blit(largeText, largeTextRect)
+       easy_button.draw_all()
+       medium_button.draw_all()
+       hard_button.draw_all()
+       largeText.draw_text()
        pg.display.flip()
        clock.tick(60)
 # menu
 def game_menu():
     screen.fill(white)
     menu = True
-    start_button_size = (350,100)
+    start_button = TextButton(screen, (resolutionX/2, 300), (350,100), 'Start Game', black, color_button=red, fontsize=1)
+    # start_button_size = (350,100)
     diff_button_size = (350,100)
     highscore_button_size = (350,100)
     quit_button_size = (350,100)
-    start_button_pos = (resolutionX/2, 300)
+    # start_button_pos = (resolutionX/2, 300)
     diff_button_pos = (resolutionX/2, 420)
     highscore_button_pos = (resolutionX/2, 540)
     quit_button_pos = (resolutionX/2, 660)
-    start_button_pos_corr = (start_button_pos[0]-start_button_size[0]/2, start_button_pos[1]-start_button_size[1]/2)
+    # start_button_pos_corr = (start_button_pos[0]-start_button_size[0]/2, start_button_pos[1]-start_button_size[1]/2)
     diff_button_pos_corr = (diff_button_pos[0]-diff_button_size[0]/2, diff_button_pos[1]-diff_button_size[1]/2)
     highscore_button_pos_corr = (highscore_button_pos[0]-highscore_button_size[0]/2, highscore_button_pos[1]-highscore_button_size[1]/2)
     quit_button_pos_corr = (quit_button_pos[0]-quit_button_size[0]/2, quit_button_pos[1]-quit_button_size[1]/2)
     # button_size = (300,100)
     fontLarge = pg.font.SysFont('arial', 115)
     fontSmall = pg.font.SysFont('arial', 80)
-    start_buttonText = fontSmall.render('Start Game', True, black)
-    start_buttonTextRect = start_buttonText.get_rect()
-    start_buttonTextRect.center = (start_button_pos)
+    # start_buttonText = fontSmall.render('Start Game', True, black)
+    # start_buttonTextRect = start_buttonText.get_rect()
+    # start_buttonTextRect.center = (start_button_pos)
     diff_buttonText = fontSmall.render('Difficulty', True, black)
     diff_buttonTextRect = diff_buttonText.get_rect()
     diff_buttonTextRect.center = (diff_button_pos)
@@ -456,7 +442,7 @@ def game_menu():
     largeText = fontLarge.render('Minesweeper', True, black)
     largeTextRect = largeText.get_rect()
     largeTextRect.center = (resolutionX/2, 100)
-    start_button = pg.Rect(start_button_pos_corr[0], start_button_pos_corr[1], start_button_size[0], start_button_size[1])
+    # start_button = pg.Rect(start_button_pos_corr[0], start_button_pos_corr[1], start_button_size[0], start_button_size[1])
     diff_button = pg.Rect(diff_button_pos_corr[0], diff_button_pos_corr[1], diff_button_size[0], diff_button_size[1])
     highscore_button = pg.Rect(highscore_button_pos_corr[0], highscore_button_pos_corr[1], highscore_button_size[0], highscore_button_size[1])
     quit_button = pg.Rect(quit_button_pos_corr[0], quit_button_pos_corr[1], quit_button_size[0], quit_button_size[1])
@@ -478,12 +464,12 @@ def game_menu():
                 if quit_button.collidepoint(mouse_pos):
                     menu = False
         screen.fill(white)
-        pg.draw.rect(screen, [255,0,0], start_button)
+        # pg.draw.rect(screen, [255,0,0], start_button)
         pg.draw.rect(screen, [255,0,0], diff_button)
         pg.draw.rect(screen, [255,0,0], highscore_button)
         pg.draw.rect(screen, [255,0,0], quit_button)
         screen.blit(largeText, largeTextRect)
-        screen.blit(start_buttonText, start_buttonTextRect)
+        start_button.draw_all()
         screen.blit(diff_buttonText, diff_buttonTextRect)
         screen.blit(highscore_buttonText, highscore_buttonTextRect)
         screen.blit(quit_buttonText, quit_buttonTextRect)
