@@ -64,10 +64,7 @@ for i in range(9):
 # while True:
 #    pg.display.flip()
    
-diff_number = 0
-# number of mines in the game
-number_of_mines = 10
-number_of_mines_static = number_of_mines
+
 # creating the array where the cells are stored
 game_array = []
 # array to handle the neighbouring cells
@@ -126,15 +123,21 @@ class TextButton(pg.Rect):
         self.size = size
         self.text = text
         self.font = font
+        self.color = color
         self.color_button = color_button
         font_array = (115,80,50)
         self.fontUsed = pg.font.SysFont(font, font_array[fontsize])
         pos_corr = (pos[0]-size[0]/2, pos[1]-size[1]/2)
-        self.buttonText = self.fontUsed.render(text, True, color)
+        self.buttonText = self.fontUsed.render(self.text, True, self.color)
         self.buttonTextRect = self.buttonText.get_rect()
         self.buttonTextRect.center = (self.pos)
         super().__init__(pos_corr[0], pos_corr[1], size[0], size[1])
     
+    def update_text(self, text):
+        self.buttonText = self.fontUsed.render(text, True, self.color)
+        self.buttonTextRect = self.buttonText.get_rect()
+        self.buttonTextRect.center = (self.pos)
+        
     def draw_text(self):
         self.screen.blit(self.buttonText, self.buttonTextRect)
         
@@ -162,9 +165,6 @@ def floodfill(row, column, game_array):
             active_cell.selected = True
 
 def difficulty(var, num=10):
-   global diff_number
-   global number_of_mines
-   global number_of_mines_static
    if var == 'hard':
       number_of_mines = 50
       diff_number = 2
@@ -176,16 +176,15 @@ def difficulty(var, num=10):
       diff_number = 0
    if var == 'custom':
       number_of_mines = num
-   number_of_mines_static = number_of_mines
+   return number_of_mines, diff_number
 # reset function to start the game over
-def reset():
+def reset(number_of_mines):
    screen.blit(smiles_default, smiles_pos)
    reset_var = 1
    win = False
    lose = False
    game_array = []
    game_array = fill_cells(game_array_size)
-   number_of_mines = number_of_mines_static
    put_mines(number_of_mines, game_array)
    for cell_obj in game_array:
       cell_obj.get_neighbouring_mines(game_array)
@@ -227,7 +226,7 @@ def highscore(final_time, diff):
       return False
       
 # game loop
-def game_loop():
+def game_loop(number_of_mines, diff_number):
     screen.fill(white)
     running = True
     win = False
@@ -241,10 +240,8 @@ def game_loop():
     smiles_button_pos = (smiles_pos)
     smiles_button = pg.Rect(smiles_button_pos[0], smiles_button_pos[1], smiles_button_size[0], smiles_button_size[1])
     fontSmall = pg.font.SysFont('arial', 80)
-    fontSmaller = pg.font.SysFont('arial', 50)
-    highscoreText = fontSmaller.render('New Highscore!', True, black)
-    highscoreTextRect = highscoreText.get_rect()
-    highscoreTextRect.center = (resolutionX*1/4, 50)
+    highscoreText = TextButton(screen, (resolutionX*1/4, 50), (500,100), 'New Highscore!', black, fontsize=2)
+    timeText = TextButton(screen, (resolutionX*3/4, 50), (500,100), 'buffer', black, fontsize=2)
     tick = 0
     reset_var = 0
     update = 0
@@ -264,7 +261,7 @@ def game_loop():
              row = (mouseY-100) // space_per_cell
              # check if the smiley is pressed and reset the game
              if smiles_button.collidepoint(mouseX, mouseY):
-                reset_var, win, lose, game_array = reset()
+                reset_var, win, lose, game_array = reset(number_of_mines)
                 pg.display.update()
              index = column*game_array_size + row
              active_cell = game_array[index]
@@ -299,7 +296,7 @@ def game_loop():
                 win_cond += 1
              else:
                 non_win_cond = False
-       if win_cond == number_of_mines_static and non_win_cond:
+       if win_cond == number_of_mines and non_win_cond:
           for cell_obj in game_array:
              cell_obj.selected = True
           screen.blit(smiles_win, smiles_pos)
@@ -315,17 +312,15 @@ def game_loop():
           tick = 0
        if tick % 6 == 0 and win == False:
           time_in_s = tick / 60
-          timeText = fontSmall.render(f'{time_in_s}', True, black)
-          timeTextRect = timeText.get_rect()
-          timeTextRect.center = (resolutionX*3/4, 50)
+          timeText.update_text(f'{time_in_s}')
        if win == True:
           time_in_s_final = tick/60
           if highscore(time_in_s_final, diff_number):
              update = 60
           if update:
-             screen.blit(highscoreText, highscoreTextRect)
+             highscoreText.draw_text()
              update -= 1
-       screen.blit(timeText, timeTextRect)
+       timeText.draw_text()
        pg.display.flip()
        reset_var = 0
        clock.tick(60)
@@ -365,7 +360,7 @@ def highscore_menu():
        pg.display.flip()
        clock.tick(60)
              
-def sel_diff():
+def sel_diff(number_of_mines, diff_number):
     screen.fill(white)
     selDiff = True
     largeText = TextButton(screen, (resolutionX/2,100), (500,100), 'Set Difficulty', black, fontsize=0)
@@ -384,13 +379,13 @@ def sel_diff():
           if event.type == pg.MOUSEBUTTONDOWN:
              mouse_pos = event.pos
              if easy_button.collidepoint(mouse_pos):
-                difficulty('easy')
+                number_of_mines, diff_number = difficulty('easy')
                 update = 60
              if medium_button.collidepoint(mouse_pos):
-                difficulty('medium')
+                number_of_mines, diff_number = difficulty('medium')
                 update = 60
              if hard_button.collidepoint(mouse_pos):
-                difficulty('hard')
+                number_of_mines, diff_number = difficulty('hard')
                 update = 60
        screen.fill(white)
        if update:
@@ -402,45 +397,17 @@ def sel_diff():
        largeText.draw_text()
        pg.display.flip()
        clock.tick(60)
+    return number_of_mines, diff_number    
 # menu
 def game_menu():
     screen.fill(white)
     menu = True
+    number_of_mines, diff_number = difficulty('easy')
+    largeText = TextButton(screen, (resolutionX/2, 100), (350,100), 'Minesweeper', black, fontsize=0)
     start_button = TextButton(screen, (resolutionX/2, 300), (350,100), 'Start Game', black, color_button=red, fontsize=1)
-    # start_button_size = (350,100)
-    diff_button_size = (350,100)
-    highscore_button_size = (350,100)
-    quit_button_size = (350,100)
-    # start_button_pos = (resolutionX/2, 300)
-    diff_button_pos = (resolutionX/2, 420)
-    highscore_button_pos = (resolutionX/2, 540)
-    quit_button_pos = (resolutionX/2, 660)
-    # start_button_pos_corr = (start_button_pos[0]-start_button_size[0]/2, start_button_pos[1]-start_button_size[1]/2)
-    diff_button_pos_corr = (diff_button_pos[0]-diff_button_size[0]/2, diff_button_pos[1]-diff_button_size[1]/2)
-    highscore_button_pos_corr = (highscore_button_pos[0]-highscore_button_size[0]/2, highscore_button_pos[1]-highscore_button_size[1]/2)
-    quit_button_pos_corr = (quit_button_pos[0]-quit_button_size[0]/2, quit_button_pos[1]-quit_button_size[1]/2)
-    # button_size = (300,100)
-    fontLarge = pg.font.SysFont('arial', 115)
-    fontSmall = pg.font.SysFont('arial', 80)
-    # start_buttonText = fontSmall.render('Start Game', True, black)
-    # start_buttonTextRect = start_buttonText.get_rect()
-    # start_buttonTextRect.center = (start_button_pos)
-    diff_buttonText = fontSmall.render('Difficulty', True, black)
-    diff_buttonTextRect = diff_buttonText.get_rect()
-    diff_buttonTextRect.center = (diff_button_pos)
-    highscore_buttonText = fontSmall.render('Highscore', True, black)
-    highscore_buttonTextRect = highscore_buttonText.get_rect()
-    highscore_buttonTextRect.center = (highscore_button_pos)
-    quit_buttonText = fontSmall.render('Quit Game', True, black)
-    quit_buttonTextRect = quit_buttonText.get_rect()
-    quit_buttonTextRect.center = (quit_button_pos)
-    largeText = fontLarge.render('Minesweeper', True, black)
-    largeTextRect = largeText.get_rect()
-    largeTextRect.center = (resolutionX/2, 100)
-    # start_button = pg.Rect(start_button_pos_corr[0], start_button_pos_corr[1], start_button_size[0], start_button_size[1])
-    diff_button = pg.Rect(diff_button_pos_corr[0], diff_button_pos_corr[1], diff_button_size[0], diff_button_size[1])
-    highscore_button = pg.Rect(highscore_button_pos_corr[0], highscore_button_pos_corr[1], highscore_button_size[0], highscore_button_size[1])
-    quit_button = pg.Rect(quit_button_pos_corr[0], quit_button_pos_corr[1], quit_button_size[0], quit_button_size[1])
+    diff_button = TextButton(screen, (resolutionX/2, 420), (350,100), 'Difficulty', black, color_button=red, fontsize=1)
+    highscore_button = TextButton(screen, (resolutionX/2, 540), (350,100), 'Highscore', black, color_button=red, fontsize=1)
+    quit_button = TextButton(screen, (resolutionX/2, 660), (350,100), 'Quit Game', black, color_button=red, fontsize=1)
     while menu:
         for event in pg.event.get():
             if event.type == pg.QUIT:
@@ -448,26 +415,21 @@ def game_menu():
             if event.type == pg.MOUSEBUTTONDOWN:
                 mouse_pos = event.pos
                 if start_button.collidepoint(mouse_pos):
-                    game_loop()
+                    game_loop(number_of_mines, diff_number)
                     screen.fill(white)
                 if diff_button.collidepoint(mouse_pos):
-                    sel_diff()
+                    number_of_mines, diff_number = sel_diff(number_of_mines, diff_number)
                     screen.fill(white)
                 if highscore_button.collidepoint(mouse_pos):
                     highscore_menu()
                     screen.fill(white)
                 if quit_button.collidepoint(mouse_pos):
                     menu = False
-        screen.fill(white)
-        # pg.draw.rect(screen, [255,0,0], start_button)
-        pg.draw.rect(screen, [255,0,0], diff_button)
-        pg.draw.rect(screen, [255,0,0], highscore_button)
-        pg.draw.rect(screen, [255,0,0], quit_button)
-        screen.blit(largeText, largeTextRect)
+        largeText.draw_text()
         start_button.draw_all()
-        screen.blit(diff_buttonText, diff_buttonTextRect)
-        screen.blit(highscore_buttonText, highscore_buttonTextRect)
-        screen.blit(quit_buttonText, quit_buttonTextRect)
+        diff_button.draw_all()
+        highscore_button.draw_all()
+        quit_button.draw_all()
         pg.display.flip()
         clock.tick(60)
         
