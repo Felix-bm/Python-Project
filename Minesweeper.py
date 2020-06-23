@@ -108,7 +108,7 @@ class Cell:
          else:
             screen.blit(cell_default, pos)
             
-   def get_neighbouring_mines(self):
+   def get_neighbouring_mines(self, game_array):
       for pos in neighbouring_mines_array:
          new_row = self.row + pos[0]
          new_column = self.column + pos[1]
@@ -149,7 +149,7 @@ class TextButton(pg.Rect):
     
 # implement the standard minesweeper behaviour, where if you click on an
 # empty cell, all neighbouring cells are getting selected as well
-def floodfill(row, column):
+def floodfill(row, column, game_array):
    for pos in neighbouring_mines_array:
       new_row = row + pos[0]
       new_column = column + pos[1]
@@ -157,7 +157,7 @@ def floodfill(row, column):
          active_cell = game_array[new_column*game_array_size + new_row]
          if active_cell.neighbouring_mines == 0 and not active_cell.selected:
             active_cell.selected = True
-            floodfill(new_row, new_column)
+            floodfill(new_row, new_column, game_array)
          else:
             active_cell.selected = True
 
@@ -180,29 +180,27 @@ def difficulty(var, num=10):
 # reset function to start the game over
 def reset():
    screen.blit(smiles_default, smiles_pos)
-   global reset_var
-   global game_array
-   global win
-   global lose
    reset_var = 1
    win = False
    lose = False
    game_array = []
-   fill_cells(game_array_size)
+   game_array = fill_cells(game_array_size)
    number_of_mines = number_of_mines_static
-   put_mines(number_of_mines)
-      
+   put_mines(number_of_mines, game_array)
    for cell_obj in game_array:
-      cell_obj.get_neighbouring_mines()
+      cell_obj.get_neighbouring_mines(game_array)
+   return reset_var, win, lose, game_array
+      
 
 # filling the game array with cells 
 def fill_cells(game_array_size):
-   global game_array
+   game_array = []
    for i in range(game_array_size*game_array_size):
       game_array.append(Cell(i//game_array_size, i%game_array_size))
+   return game_array
 
 # putting mines at random positions
-def put_mines(number_of_mines):
+def put_mines(number_of_mines, game_array):
    while number_of_mines > 0:
       buffer = rnd.randrange(game_array_size*game_array_size)
       if not game_array[buffer].mine:
@@ -230,18 +228,15 @@ def highscore(final_time, diff):
       
 # game loop
 def game_loop():
-    global win
-    global lose
-    global reset_var
     screen.fill(white)
     running = True
     win = False
     lose = False
-    fill_cells(game_array_size)
-    put_mines(number_of_mines)
+    game_array = fill_cells(game_array_size)
+    put_mines(number_of_mines, game_array)
     # calculate the number of neighbouring mines for every cell
     for cell_obj in game_array:
-       cell_obj.get_neighbouring_mines()
+       cell_obj.get_neighbouring_mines(game_array)
     smiles_button_size = (space_per_cell,space_per_cell)
     smiles_button_pos = (smiles_pos)
     smiles_button = pg.Rect(smiles_button_pos[0], smiles_button_pos[1], smiles_button_size[0], smiles_button_size[1])
@@ -269,7 +264,7 @@ def game_loop():
              row = (mouseY-100) // space_per_cell
              # check if the smiley is pressed and reset the game
              if smiles_button.collidepoint(mouseX, mouseY):
-                reset()
+                reset_var, win, lose, game_array = reset()
                 pg.display.update()
              index = column*game_array_size + row
              active_cell = game_array[index]
@@ -282,7 +277,7 @@ def game_loop():
              if pg.mouse.get_pressed()[0] and row >= 0:
                 active_cell.selected = True
                 if active_cell.neighbouring_mines == 0 and not active_cell.mine:
-                   floodfill(row, column)
+                   floodfill(row, column, game_array)
                 if active_cell.mine == 1:
                    for cell_obj in game_array:
                       if cell_obj.mine == 1:
