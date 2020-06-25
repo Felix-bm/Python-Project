@@ -23,7 +23,7 @@ white = (255,255,255)
 grey = (150,150,150)
 dark_grey = (100,100,100)
 black = (0,0,0)
-red = (255,0,0)
+red = (180,20,20)
 
 # loading the sprites and resize them
 # sprites from spriters_resource.com
@@ -265,7 +265,7 @@ def game_loop(number_of_mines, diff_number):
                             smiles_button_size[0], smiles_button_size[1])
     # highscore text, that is drawn if a new highscore has been achieved
     highscoreText = TextButton(screen, (resolutionX*1/4, 50), (500,100),
-                               'New Highscore!', black, fontsize=2)
+                               'New Highscore!', red, fontsize=2)
     # initializing the text Button that will be showing the game time
     timeText = TextButton(screen, (resolutionX*3/4, 50), (500,100),
                           'buffer', black, fontsize=2)
